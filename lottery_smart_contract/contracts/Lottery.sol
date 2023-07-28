@@ -19,7 +19,9 @@ contract Lottery{
     uint256 constant internal BET_AMOUNT = 5 * 10 ** 15;
     uint256 private _pot;
 
+    enum BettingResult {Fail, Win, Draw}
     enum BlockStatus {Checkable, NotRevealed, BlockLimitPassed}
+
     event BET(uint256 index, address bettor, uint256 amount, bytes1 challenges, uint256 answerBlockNumber);
 
     constructor() public{
@@ -84,6 +86,47 @@ contract Lottery{
             popBet(cur);
         }
     }
+
+    /**
+     * @dev 베팅글자와 정답을 확인.
+     * @param challenges 베팅 글자
+     * @param answer 블락해쉬
+     * @return 정답 결과
+     */
+    function isMatch(bytes1 challenges, bytes32 answer) public pure returns (BettingResult){
+        //challenges 0xab
+        // answer 0xab........ff 32 bytes
+
+        bytes1 c1 = challenges;
+        bytes1 c2 = challenges;
+
+        bytes1 a1 = answer[0];
+        bytes1 a2 = answer[0];
+
+        // Get first number
+        c1 = c1 >> 4;   // 0xab => 0x0a
+        c1 = c1 << 4;   // 0x0a => 0xa0
+
+        a1 = a1 >> 4;
+        a1 = a1 << 4;
+
+        // Get Second number
+        c2 = c2 << 4;   // 0xab => 0xb0
+        c2 = c2 >> 4;   // 0xb0 => oxab
+
+        a2 = a2 << 4;
+        a2 = a2 >> 4;
+
+        if(a1 == c1 && a2 == c2){
+            return BettingResult.Win;
+        }
+
+        if(a1 == c1 || a2 == c2){
+            return BettingResult.Draw;
+        }
+
+        return BettingResult.Fail;
+    }
     
     function getBLockStatus(uint256 answerBlockNumber) internal view returns (BlockStatus) {
         if(block.number > answerBlockNumber && block.number < BLOCK_LIMIT + answerBlockNumber)
@@ -93,9 +136,9 @@ contract Lottery{
             return BlockStatus.NotRevealed;
 
         if(block.number >= answerBlockNumber + BLOCK_LIMIT)
-            return BLcokStatus.BlockLimitPassed;
+            return BlockStatus.BlockLimitPassed;
 
-        return BlockStatus.BlockLimitPassed
+        return BlockStatus.BlockLimitPassed;
     }
 
     function getBetInfo(uint256 index) public view returns (uint256 answerBlockNumber, address bettor, bytes1 challenges){
