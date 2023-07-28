@@ -9,7 +9,7 @@ contract("Lottery", function ([deploy, user1, user2]) {
         lottery = await Lottery.new();
     });
 
-    describe.only("Bet", function () {
+    describe("Bet", function () {
         it("should fail when the bet money is not 0.005 ETH", async () => {
             // Fail transaction
             await lottery.bet("0xab", { from: user1, value: 4000000000000000 });
@@ -42,6 +42,28 @@ contract("Lottery", function ([deploy, user1, user2]) {
 
             // check log
             console.log(receipt);
+        });
+    });
+
+    describe.only("isMatch", function () {
+        let blockHash =
+            "0xab0dcf712a622efcf37deff66439f1257055d50a79e2fd6414c5e8c9fd09c274";
+        it("should be BettingResult.Win when two characters match", async () => {
+            let matchingResult = await lottery.isMatch("0xab", blockHash);
+            assert.equal(matchingResult, 1);
+        });
+
+        it("should be BettingResult.Win when two characters match", async () => {
+            let matchingResult = await lottery.isMatch("0xcd", blockHash);
+            assert.equal(matchingResult, 0);
+        });
+
+        it("should be BettingResult.Win when two characters match", async () => {
+            let matchingResult = await lottery.isMatch("0xaf", blockHash);
+            assert.equal(matchingResult, 2);
+
+            matchingResult = await lottery.isMatch("0xfb", blockHash);
+            assert.equal(matchingResult, 2);
         });
     });
 });
