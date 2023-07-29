@@ -1,26 +1,32 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import "./App.css";
+import { useEtherBalance, useEthers } from "@usedapp/core";
+import { formatEther } from "@ethersproject/units";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+const App = () => {
+    const { activateBrowserWallet, deactivate, account } = useEthers();
+    const etherBalance = useEtherBalance(account);
 
+    return (
+        <div className="App">
+            <header className="App-header">
+                {account && `Account: ${account}`}
+                <br />
+                {etherBalance &&
+                    `Balance: ${Number(formatEther(etherBalance)).toFixed(
+                        4
+                    )} ETH`}
+                <p className="App-link">
+                    {account ? (
+                        <code onClick={deactivate}>LogOut</code>
+                    ) : (
+                        <code onClick={() => activateBrowserWallet()}>
+                            Connect Wallet
+                        </code>
+                    )}
+                </p>
+            </header>
+        </div>
+    );
+};
 export default App;
